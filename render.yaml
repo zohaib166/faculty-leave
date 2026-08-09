@@ -1,0 +1,21 @@
+# Render Blueprint — Faculty Leave System
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: faculty-leave-system
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+
+    # React Router requires all paths to serve index.html (client-side routing)
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false   # You will set this manually in the Render dashboard
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false   # You will set this manually in the Render dashboard

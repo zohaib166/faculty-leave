@@ -1,0 +1,30 @@
+# Dependencies — reinstalled inside Docker via npm ci
+node_modules
+
+# Build output — generated fresh inside Docker
+dist
+dist-ssr
+
+# Environment files — secrets are passed as build ARGs, not copied
+.env
+.env.*
+!.env.example
+
+# Git & editor files
+.git
+.gitignore
+.vscode
+.idea
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files themselves (not needed inside the image)
+Dockerfile
+docker-compose.yml
+.dockerignore
