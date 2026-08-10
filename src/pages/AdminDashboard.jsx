@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
-import { UserPlus, Shield, UserCheck, UserX, Trash2, Edit3 } from 'lucide-react';
+import { UserPlus, Shield, UserCheck, UserX, Trash2, Edit3, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Secondary client instance to allow signUp without signing out the active Admin
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -12,6 +13,7 @@ const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
 
 export default function AdminDashboard() {
     const [users, setUsers] = useState([]);
+    const navigate = useNavigate();
 
     // New User Form State
     const [name, setName] = useState('');
@@ -130,7 +132,24 @@ export default function AdminDashboard() {
     return (
         <div className="max-w-6xl mx-auto py-8 px-4 space-y-8">
 
-            {/* 1. Add User Form */}
+            {/* Reports Quick Access Banner */}
+            <div
+                onClick={() => navigate('/reports')}
+                className="flex items-center justify-between bg-indigo-600 hover:bg-indigo-700 transition-all cursor-pointer p-4 rounded-2xl shadow-lg shadow-indigo-600/20"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/10 rounded-xl">
+                        <FileText size={20} className="text-white" />
+                    </div>
+                    <div>
+                        <p className="text-white font-bold text-sm">Faculty Activity & Leave Reports</p>
+                        <p className="text-indigo-200 text-xs">View full summary of leaves, substitutions & faculty activity</p>
+                    </div>
+                </div>
+                <span className="text-white text-xs font-semibold bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition-all">
+                    Open Reports →
+                </span>
+            </div>
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="flex items-center gap-2 mb-6 text-slate-800">
                     <UserPlus size={20} className="text-indigo-600" />

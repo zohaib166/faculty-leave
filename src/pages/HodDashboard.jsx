@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function HodDashboard() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchHodRequests();
@@ -52,7 +55,26 @@ export default function HodDashboard() {
     if (loading) return <div className="p-8 text-center text-slate-500">Loading requests...</div>;
 
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
+            {/* Reports Quick Access Banner */}
+            <div
+                onClick={() => navigate('/reports')}
+                className="flex items-center justify-between bg-indigo-600 hover:bg-indigo-700 transition-all cursor-pointer p-4 rounded-2xl shadow-lg shadow-indigo-600/20"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/10 rounded-xl">
+                        <FileText size={20} className="text-white" />
+                    </div>
+                    <div>
+                        <p className="text-white font-bold text-sm">Faculty Activity & Leave Reports</p>
+                        <p className="text-indigo-200 text-xs">View full summary of leaves, substitutions & faculty activity</p>
+                    </div>
+                </div>
+                <span className="text-white text-xs font-semibold bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition-all">
+                    Open Reports →
+                </span>
+            </div>
+
             <h2 className="text-xl font-bold text-slate-800 mb-6">Head of Department (HoD) Approval Dashboard</h2>
 
             {requests.length === 0 ? (

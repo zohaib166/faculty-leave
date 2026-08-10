@@ -8,6 +8,7 @@ import SubRequests from './pages/SubRequests';
 import HodDashboard from './pages/HodDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ProfileSettings from './components/ProfileSettings';
+import Reports from './pages/Reports';
 
 export default function App() {
   const { user, profile, isHod, isAdmin } = useAuth();
@@ -28,6 +29,12 @@ export default function App() {
           {/* Standard Faculty Routes (Admins are redirected to /admin) */}
           <Route path="/" element={isAdmin ? <Navigate to="/admin" replace /> : <FacultyDashboard />} />
           <Route path="/substitute-requests" element={isAdmin ? <Navigate to="/admin" replace /> : <SubRequests />} />
+
+          {/* Reports — accessible to Admin and HoD */}
+          <Route
+            path="/reports"
+            element={(isAdmin || isHod) ? <Reports /> : <Navigate to="/" replace />}
+          />
 
           {/* Profile Settings — accessible to all roles */}
           <Route path="/profile" element={<ProfileSettings />} />
