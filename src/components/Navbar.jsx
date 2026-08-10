@@ -39,26 +39,13 @@ export default function Navbar() {
 
                     {/* Admin Navigation */}
                     {profile.role === 'ADMIN' && (
-                        <div className="bg-slate-800/80 p-1 rounded-xl border border-slate-700/50 flex gap-1">
-                            <button
-                                onClick={() => navigate('/admin')}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
-                                    location.pathname === '/admin' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-amber-400'
-                                }`}
-                            >
-                                <ShieldAlert size={13} />
-                                Admin Console
-                            </button>
-                            <button
-                                onClick={() => navigate('/reports')}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
-                                    location.pathname === '/reports' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-indigo-400'
-                                }`}
-                            >
-                                <FileText size={13} />
-                                Reports
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => navigate('/admin')}
+                            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 text-white shadow-sm hover:bg-amber-700 transition-all flex items-center gap-1.5"
+                        >
+                            <ShieldAlert size={15} />
+                            Admin Console
+                        </button>
                     )}
 
                     {/* HoD Navigation */}

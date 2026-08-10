@@ -30,10 +30,10 @@ export default function App() {
           <Route path="/" element={isAdmin ? <Navigate to="/admin" replace /> : <FacultyDashboard />} />
           <Route path="/substitute-requests" element={isAdmin ? <Navigate to="/admin" replace /> : <SubRequests />} />
 
-          {/* Reports — accessible to Admin and HoD */}
+          {/* Reports — accessible to HoD only */}
           <Route
             path="/reports"
-            element={(isAdmin || isHod) ? <Reports /> : <Navigate to="/" replace />}
+            element={isHod ? <Reports /> : <Navigate to="/" replace />}
           />
 
           {/* Profile Settings — accessible to all roles */}
