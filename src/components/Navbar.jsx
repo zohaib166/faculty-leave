@@ -48,6 +48,26 @@ export default function Navbar() {
                         </button>
                     )}
 
+                    {/* Faculty Navigation (non-HoD, non-Admin) */}
+                    {!isHod && !isAdmin && (
+                        <div className="bg-slate-800/80 p-1 rounded-xl border border-slate-700/50 flex gap-1">
+                            <button
+                                onClick={() => navigate('/')}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${location.pathname === '/' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                                    }`}
+                            >
+                                Apply Leave
+                            </button>
+                            <button
+                                onClick={() => navigate('/substitute-requests')}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${location.pathname === '/substitute-requests' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                                    }`}
+                            >
+                                Substitute Requests
+                            </button>
+                        </div>
+                    )}
+
                     {/* HoD Navigation */}
                     {isHod && (
                         <div className="bg-slate-800/80 p-1 rounded-xl border border-slate-700/50 flex gap-1">
