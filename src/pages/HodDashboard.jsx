@@ -26,8 +26,9 @@ export default function HodDashboard() {
 
     const fetchHodRequests = async () => {
         const { data, error } = await supabase
+            .schema('faculty_leave')
             .from('leave_requests')
-            .select('*, profiles!leave_requests_applicant_id_fkey(name), lecture_engagements(*)')
+            .select('*, profiles!leave_requests_applicant_id_fkey(name, leave_balance), lecture_engagements(*)')
             .order('created_at', { ascending: false });
 
         if (!error) setRequests(data || []);
@@ -39,17 +40,57 @@ export default function HodDashboard() {
         return engagements.every((eng) => eng.status === 'ACCEPTED');
     };
 
-    const updateLeaveStatus = async (requestId, newStatus) => {
-        const { error } = await supabase
+    // Helper to extract numerical leave value from request duration
+    const getDurationValue = (durationStr) => {
+        if (durationStr && (durationStr === 'HALF_DAY_FIRST' || durationStr === 'HALF_DAY_SECOND' || durationStr.startsWith('HALF_DAY'))) {
+            return 0.5;
+        }
+        return 1.0;
+    };
+
+    const updateLeaveStatus = async (requestId, newStatus, applicantId, durationStr) => {
+        // 1. Update the leave request status in database
+        const { error: updateError } = await supabase
+            .schema('faculty_leave')
             .from('leave_requests')
             .update({ status: newStatus })
             .eq('id', requestId);
 
-        if (error) {
-            alert('Error updating status: ' + error.message);
-        } else {
-            fetchHodRequests();
+        if (updateError) {
+            alert('Error updating status: ' + updateError.message);
+            return;
         }
+
+        // 2. If APPROVED or APPROVED_BY_OVERRIDE, update profile leave_balance in database
+        if (newStatus === 'APPROVED' || newStatus === 'APPROVED_BY_OVERRIDE') {
+            const leaveValue = getDurationValue(durationStr);
+
+            // Fetch current profile balance to ensure accurate subtraction
+            const { data: profile } = await supabase
+                .schema('faculty_leave')
+                .from('profiles')
+                .select('leave_balance')
+                .eq('id', applicantId)
+                .single();
+
+            if (profile) {
+                const currentBalance = Number(profile.leave_balance ?? 12);
+                const updatedBalance = currentBalance - leaveValue;
+
+                const { error: balanceError } = await supabase
+                    .schema('faculty_leave')
+                    .from('profiles')
+                    .update({ leave_balance: updatedBalance })
+                    .eq('id', applicantId);
+
+                if (balanceError) {
+                    alert('Status updated, but failed to deduct leave balance: ' + balanceError.message);
+                }
+            }
+        }
+
+        // Refresh dashboard items
+        fetchHodRequests();
     };
 
     if (loading) return <div className="p-8 text-center text-slate-500">Loading requests...</div>;
@@ -99,7 +140,6 @@ export default function HodDashboard() {
                                 ))}
                             </ul>
 
-                            {/* PASTE YOUR CODE SNIPPET RIGHT HERE */}
                             {req.status === 'APPROVED' || req.status === 'APPROVED_BY_OVERRIDE' || req.status === 'REJECTED' ? (
                                 <div className="mt-3 text-xs font-semibold text-slate-500 bg-slate-100 p-2 rounded-lg inline-block">
                                     Status locked: Request is <span className="uppercase text-indigo-600">{req.status}</span>
@@ -107,23 +147,24 @@ export default function HodDashboard() {
                             ) : (
                                 <div className="flex gap-2 mt-4">
                                     <button
-                                        onClick={() => updateLeaveStatus(req.id, 'APPROVED')}
+                                        onClick={() => updateLeaveStatus(req.id, 'APPROVED', req.applicant_id, req.duration)}
                                         disabled={!substitutesReady}
-                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg text-white ${substitutesReady ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-300 cursor-not-allowed'
-                                            }`}
+                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg text-white ${
+                                            substitutesReady ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-300 cursor-not-allowed'
+                                        }`}
                                     >
                                         Approve Leave
                                     </button>
 
                                     <button
-                                        onClick={() => updateLeaveStatus(req.id, 'REJECTED')}
+                                        onClick={() => updateLeaveStatus(req.id, 'REJECTED', req.applicant_id, req.duration)}
                                         className="px-3 py-1.5 text-xs font-medium rounded-lg bg-rose-600 hover:bg-rose-700 text-white"
                                     >
                                         Reject
                                     </button>
 
                                     <button
-                                        onClick={() => updateLeaveStatus(req.id, 'APPROVED_BY_OVERRIDE')}
+                                        onClick={() => updateLeaveStatus(req.id, 'APPROVED_BY_OVERRIDE', req.applicant_id, req.duration)}
                                         className="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
                                     >
                                         Emergency Override
