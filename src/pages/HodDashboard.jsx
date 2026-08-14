@@ -48,50 +48,21 @@ export default function HodDashboard() {
         return 1.0;
     };
 
-    const updateLeaveStatus = async (requestId, newStatus, applicantId, durationStr) => {
-        // 1. Update the leave request status in database
-        const { error: updateError } = await supabase
-            .schema('faculty_leave')
-            .from('leave_requests')
-            .update({ status: newStatus })
-            .eq('id', requestId);
+    const updateLeaveStatus = async (requestId, newStatus) => {
+    // 1. Update status in Supabase (the DB trigger automatically handles balance deduction)
+    const { error } = await supabase
+        .schema('faculty_leave')
+        .from('leave_requests')
+        .update({ status: newStatus })
+        .eq('id', requestId);
 
-        if (updateError) {
-            alert('Error updating status: ' + updateError.message);
-            return;
-        }
-
-        // 2. If APPROVED or APPROVED_BY_OVERRIDE, update profile leave_balance in database
-        if (newStatus === 'APPROVED' || newStatus === 'APPROVED_BY_OVERRIDE') {
-            const leaveValue = getDurationValue(durationStr);
-
-            // Fetch current profile balance to ensure accurate subtraction
-            const { data: profile } = await supabase
-                .schema('faculty_leave')
-                .from('profiles')
-                .select('leave_balance')
-                .eq('id', applicantId)
-                .single();
-
-            if (profile) {
-                const currentBalance = Number(profile.leave_balance ?? 12);
-                const updatedBalance = currentBalance - leaveValue;
-
-                const { error: balanceError } = await supabase
-                    .schema('faculty_leave')
-                    .from('profiles')
-                    .update({ leave_balance: updatedBalance })
-                    .eq('id', applicantId);
-
-                if (balanceError) {
-                    alert('Status updated, but failed to deduct leave balance: ' + balanceError.message);
-                }
-            }
-        }
-
-        // Refresh dashboard items
+    if (error) {
+        alert('Error updating status: ' + error.message);
+    } else {
+        // Refresh requests on screen
         fetchHodRequests();
-    };
+    }
+};
 
     if (loading) return <div className="p-8 text-center text-slate-500">Loading requests...</div>;
 
