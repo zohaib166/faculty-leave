@@ -49,20 +49,20 @@ export default function HodDashboard() {
     };
 
     const updateLeaveStatus = async (requestId, newStatus) => {
-    // 1. Update status in Supabase (the DB trigger automatically handles balance deduction)
-    const { error } = await supabase
-        .schema('faculty_leave')
-        .from('leave_requests')
-        .update({ status: newStatus })
-        .eq('id', requestId);
+        // Update status in Supabase (the DB trigger deduct_leave_balance automatically handles balance deduction)
+        const { error } = await supabase
+            .schema('faculty_leave')
+            .from('leave_requests')
+            .update({ status: newStatus })
+            .eq('id', requestId);
 
-    if (error) {
-        alert('Error updating status: ' + error.message);
-    } else {
-        // Refresh requests on screen
-        fetchHodRequests();
-    }
-};
+        if (error) {
+            alert('Error updating status: ' + error.message);
+        } else {
+            // Refresh requests on screen
+            fetchHodRequests();
+        }
+    };
 
     if (loading) return <div className="p-8 text-center text-slate-500">Loading requests...</div>;
 
@@ -98,7 +98,7 @@ export default function HodDashboard() {
                     return (
                         <div key={req.id} className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm mb-4">
                             <h3 className="font-bold text-slate-800">Applicant: {req.profiles?.name}</h3>
-                            <p className="text-sm text-slate-600"><strong>Date:</strong> {req.leave_date} | <strong>Duration:</strong> {req.duration}</p>
+                            <p className="text-sm text-slate-600"><strong>Date:</strong> {req.leave_date} | <strong>Duration:</strong> {req.duration} ({getDurationValue(req.duration)} {getDurationValue(req.duration) === 1 ? 'Day' : 'Days'})</p>
                             <p className="text-sm text-slate-600"><strong>Reason:</strong> {req.reason}</p>
                             <p className="text-sm text-slate-600"><strong>Overall Status:</strong> <span className="font-semibold text-indigo-600">{req.status}</span></p>
 
@@ -118,7 +118,7 @@ export default function HodDashboard() {
                             ) : (
                                 <div className="flex gap-2 mt-4">
                                     <button
-                                        onClick={() => updateLeaveStatus(req.id, 'APPROVED', req.applicant_id, req.duration)}
+                                        onClick={() => updateLeaveStatus(req.id, 'APPROVED')}
                                         disabled={!substitutesReady}
                                         className={`px-3 py-1.5 text-xs font-medium rounded-lg text-white ${
                                             substitutesReady ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-300 cursor-not-allowed'
@@ -128,14 +128,14 @@ export default function HodDashboard() {
                                     </button>
 
                                     <button
-                                        onClick={() => updateLeaveStatus(req.id, 'REJECTED', req.applicant_id, req.duration)}
+                                        onClick={() => updateLeaveStatus(req.id, 'REJECTED')}
                                         className="px-3 py-1.5 text-xs font-medium rounded-lg bg-rose-600 hover:bg-rose-700 text-white"
                                     >
                                         Reject
                                     </button>
 
                                     <button
-                                        onClick={() => updateLeaveStatus(req.id, 'APPROVED_BY_OVERRIDE', req.applicant_id, req.duration)}
+                                        onClick={() => updateLeaveStatus(req.id, 'APPROVED_BY_OVERRIDE')}
                                         className="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 hover:bg-amber-700 text-white"
                                     >
                                         Emergency Override

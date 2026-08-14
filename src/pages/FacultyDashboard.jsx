@@ -14,6 +14,13 @@ export default function FacultyDashboard() {
     const [assignedEngagements, setAssignedEngagements] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    const getDurationValue = (durationStr) => {
+        if (durationStr && (durationStr === 'HALF_DAY_FIRST' || durationStr === 'HALF_DAY_SECOND' || durationStr.startsWith('HALF_DAY'))) {
+            return 0.5;
+        }
+        return 1.0;
+    };
+
     useEffect(() => {
         if (user?.id) {
             fetchFacultyMembers();
@@ -383,7 +390,7 @@ export default function FacultyDashboard() {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-semibold text-slate-800 text-sm">{req.leave_date}</span>
-                                        <span className="text-xs text-slate-500">({req.duration})</span>
+                                        <span className="text-xs text-slate-500">({req.duration} — {getDurationValue(req.duration)} Day)</span>
                                     </div>
                                     <p className="text-xs text-slate-600 mt-1">{req.reason}</p>
                                 </div>
