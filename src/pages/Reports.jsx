@@ -15,6 +15,14 @@ export default function Reports() {
     const [engagements, setEngagements] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Helper to calculate numerical value based on duration type
+    const getDurationValue = (durationStr) => {
+        if (durationStr && (durationStr === 'HALF_DAY_FIRST' || durationStr === 'HALF_DAY_SECOND' || durationStr.startsWith('HALF_DAY'))) {
+            return 0.5;
+        }
+        return 1.0;
+    };
+
     useEffect(() => {
         fetchReportData();
     }, []);
@@ -24,18 +32,21 @@ export default function Reports() {
 
         // 1. Fetch Profiles
         const { data: profiles } = await supabase
+            .schema('faculty_leave')
             .from('profiles')
             .select('id, name, role, leave_balance')
             .order('name');
 
         // 2. Fetch Approved Leaves
         const { data: leaves } = await supabase
+            .schema('faculty_leave')
             .from('leave_requests')
             .select('*, profiles:applicant_id(name)')
             .order('leave_date', { ascending: false });
 
         // 3. Fetch Lecture Engagements
         const { data: engs } = await supabase
+            .schema('faculty_leave')
             .from('lecture_engagements')
             .select('*, substitute:substitute_id(name), leave_requests(leave_date, applicant_id, profiles:applicant_id(name))')
             .order('id', { ascending: false });
@@ -44,11 +55,11 @@ export default function Reports() {
             const facultyList = profiles.filter(p => p.role !== 'ADMIN');
             setAllProfiles(facultyList);
 
-            // Aggregate totals per faculty member
+            // Aggregate totals per faculty member using decimal summing
             const summaryData = facultyList.map(faculty => {
-                const approvedLeaves = (leaves || []).filter(
-                    l => l.applicant_id === faculty.id && l.status?.includes('APPROVED')
-                ).length;
+                const approvedLeaves = (leaves || [])
+                    .filter(l => l.applicant_id === faculty.id && l.status?.includes('APPROVED'))
+                    .reduce((sum, req) => sum + getDurationValue(req.duration), 0);
 
                 const engagedLectures = (engs || []).filter(
                     e => e.substitute_id === faculty.id && e.status === 'ACCEPTED'
@@ -106,9 +117,9 @@ export default function Reports() {
     const filteredSummary = allProfiles
         .filter(faculty => selectedFacultyId === 'ALL' || faculty.id === selectedFacultyId)
         .map(faculty => {
-            const approvedLeaves = filteredLeaves.filter(
-                l => l.applicant_id === faculty.id && l.status?.includes('APPROVED')
-            ).length;
+            const approvedLeaves = filteredLeaves
+                .filter(l => l.applicant_id === faculty.id && l.status?.includes('APPROVED'))
+                .reduce((sum, req) => sum + getDurationValue(req.duration), 0);
 
             const engagedLectures = filteredEngagements.filter(
                 e => e.substitute_id === faculty.id && e.status === 'ACCEPTED'
@@ -270,13 +281,16 @@ export default function Reports() {
                                     <tr key={req.id}>
                                         <td className="p-3 font-medium text-slate-800">{req.profiles?.name || 'Unknown'}</td>
                                         <td className="p-3 text-slate-600">{req.leave_date}</td>
-                                        <td className="p-3 text-slate-600">{req.duration}</td>
+                                        <td className="p-3 text-slate-600">
+                                            {req.duration} ({getDurationValue(req.duration)} Day)
+                                        </td>
                                         <td className="p-3 text-slate-600">{req.reason}</td>
                                         <td className="p-3">
-                                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${req.status?.includes('APPROVED') ? 'bg-emerald-100 text-emerald-700' :
+                                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                                                req.status?.includes('APPROVED') ? 'bg-emerald-100 text-emerald-700' :
                                                 req.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
-                                                    'bg-amber-100 text-amber-700'
-                                                }`}>
+                                                'bg-amber-100 text-amber-700'
+                                            }`}>
                                                 {req.status}
                                             </span>
                                         </td>
@@ -321,10 +335,11 @@ export default function Reports() {
                                         <td className="p-3 text-slate-600">{eng.lecture_number}</td>
                                         <td className="p-3 text-slate-600">{eng.leave_requests?.leave_date || 'N/A'}</td>
                                         <td className="p-3">
-                                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${eng.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-700' :
+                                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                                                eng.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-700' :
                                                 eng.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
-                                                    'bg-amber-100 text-amber-700'
-                                                }`}>
+                                                'bg-amber-100 text-amber-700'
+                                            }`}>
                                                 {eng.status}
                                             </span>
                                         </td>
